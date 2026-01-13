@@ -1,0 +1,29 @@
+# 核心依赖
+aiohttp>=3.9.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+pyyaml>=6.0
+
+# 向量搜索
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.4; sys_platform != "darwin"
+faiss-cpu>=1.7.4; sys_platform == "darwin"
+# 如果有GPU，可以使用 faiss-gpu 替代 faiss-cpu
+# faiss-gpu>=1.7.4
+
+# 数据库（SQLite已内置，无需安装）
+# 如果需要其他数据库支持，可以添加相应驱动
+
+# GUI（Tkinter已内置，无需安装）
+# 如果需要更现代的GUI，可以考虑：
+# PyQt5>=5.15.0
+# 或
+# PyQt6>=6.5.0
+
+# 可选：用于PDF文件支持
+# PyPDF2>=3.0.0
+# pdfplumber>=0.10.0
+
+# 可选：用于更好的文本处理
+# jieba>=0.42.1  # 中文分词（如果需要）
+
