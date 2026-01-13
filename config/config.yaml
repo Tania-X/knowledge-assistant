@@ -3,7 +3,7 @@ database:
 
 ollama:
   base_url: "http://localhost:11434"
-  model_name: "deepseek-chat"
+  model_name: "deepseek-chat"  # 可修改为任何已安装的Ollama模型名称
   timeout: 120
 
 scraper:

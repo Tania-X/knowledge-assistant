@@ -151,10 +151,11 @@ python run.py
 ollama --version
 ```
 
-#### 拉取DeepSeek模型：
+#### 拉取模型：
 ```bash
-ollama pull deepseek-chat
+ollama pull <model_name>
 ```
+常见模型：`llama2`, `mistral`, `qwen`, `deepseek-chat` 等
 
 **注意**：首次拉取模型需要较长时间（模型大小约4-8GB），请确保网络连接稳定。
 
@@ -262,10 +263,11 @@ pip install PyQt6
    - 下载：https://ollama.ai/download
    - 安装并启动服务
 
-4. **拉取DeepSeek模型**
+4. **拉取Ollama模型**
    ```bash
-   ollama pull deepseek-chat
+   ollama pull <model_name>
    ```
+   常见模型：`llama2`, `mistral`, `qwen`, `deepseek-chat` 等
 
 5. **验证安装**
    ```bash
@@ -336,7 +338,7 @@ pip install https://github.com/facebookresearch/faiss/releases/download/v1.7.4/f
 
 **建议**：
 - 向量模型需要约500MB-1GB内存
-- Ollama + DeepSeek需要2-8GB内存（取决于模型大小）
+- Ollama + 模型需要2-8GB内存（取决于模型大小）
 - 建议系统内存至少8GB
 
 ## 六、系统要求
@@ -416,14 +418,16 @@ try:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get("http://localhost:11434/api/tags", timeout=aiohttp.ClientTimeout(total=5)) as resp:
-                    if resp.status == 200:
-                        print("✓ Ollama服务正在运行")
-                        data = await resp.json()
-                        models = [m['name'] for m in data.get('models', [])]
-                        if 'deepseek-chat' in models:
-                            print("✓ DeepSeek模型已安装")
-                        else:
-                            print("✗ DeepSeek模型未安装，请运行: ollama pull deepseek-chat")
+                        if resp.status == 200:
+                            print("✓ Ollama服务正在运行")
+                            data = await resp.json()
+                            models = [m['name'] for m in data.get('models', [])]
+                            if models:
+                                print(f"✓ 已安装 {len(models)} 个模型: {', '.join(models)}")
+                            else:
+                                print("✗ 未安装任何模型")
+                                print("  请先安装Ollama模型，例如: ollama pull <model_name>")
+                                return False
                         return True
         except:
             print("✗ 无法连接到Ollama服务")

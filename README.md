@@ -1,6 +1,6 @@
 # 个人知识库助手 (Knowledge Assistant)
 
-一个基于Python + SQLite构建的个人知识库系统，集成本地大模型（Ollama + DeepSeek），支持网页抓取、文件索引和智能问答。
+一个基于Python + SQLite构建的个人知识库系统，集成本地大模型（Ollama），支持网页抓取、文件索引和智能问答。
 
 ## 功能特性
 
@@ -61,13 +61,14 @@ chmod +x setup_venv.sh
 - 创建venv虚拟环境
 - 安装所有项目依赖
 
-### 2. 安装Ollama和DeepSeek模型
+### 2. 安装Ollama和模型
 
 1. 下载并安装Ollama：https://ollama.ai/
-2. 拉取DeepSeek模型：
+2. 拉取你需要的模型（例如）：
 ```bash
-ollama pull deepseek-chat
+ollama pull <model_name>
 ```
+常见模型：`llama2`, `mistral`, `qwen`, `deepseek-chat` 等
 
 ### 3. 启动Ollama服务
 
@@ -80,7 +81,7 @@ ollama serve
 
 编辑 `config/config.yaml` 文件，根据你的实际情况调整配置：
 - Ollama服务地址（默认：http://localhost:11434）
-- 模型名称（默认：deepseek-chat）
+- 模型名称（可在config.yaml中配置）
 - 数据库路径
 - 向量模型（默认使用多语言模型）
 
@@ -156,7 +157,7 @@ python run.py
 
 ### 大模型集成
 - **Ollama**：本地大模型服务
-- **DeepSeek**：中文优化的对话模型
+- 支持任何Ollama兼容的模型
 
 ## 性能优化
 
@@ -175,7 +176,7 @@ database:
 
 ollama:
   base_url: "http://localhost:11434"  # Ollama服务地址
-  model_name: "deepseek-chat"          # 模型名称
+  model_name: "deepseek-chat"          # 模型名称（可修改为任何已安装的模型）
   timeout: 120                          # 请求超时时间
 
 scraper:

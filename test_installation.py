@@ -48,11 +48,12 @@ def main():
                             print("✓ Ollama服务正在运行")
                             data = await resp.json()
                             models = [m['name'] for m in data.get('models', [])]
-                            if 'deepseek-chat' in models:
-                                print("✓ DeepSeek模型已安装")
+                            if models:
+                                print(f"✓ 已安装 {len(models)} 个模型: {', '.join(models)}")
                             else:
-                                print("✗ DeepSeek模型未安装")
-                                print("  请运行: ollama pull deepseek-chat")
+                                print("✗ 未安装任何模型")
+                                print("  请先安装Ollama模型，例如: ollama pull <model_name>")
+                                return False
                             return True
             except Exception as e:
                 print(f"✗ 无法连接到Ollama服务: {e}")

@@ -14,9 +14,20 @@ class LLMService:
     
     def __init__(self):
         self.config = config.ollama_config
-        self.base_url = self.config.get('base_url', 'http://localhost:11434')
-        self.model_name = self.config.get('model_name', 'deepseek-chat')
-        self.timeout = self.config.get('timeout', 120)
+        
+        # 必须配置项，如果缺失则抛出异常
+        self.base_url = self.config.get('base_url')
+        if not self.base_url:
+            raise ValueError("配置错误：config.yaml中缺少ollama.base_url配置")
+        
+        self.model_name = self.config.get('model_name')
+        if not self.model_name:
+            raise ValueError("配置错误：config.yaml中缺少ollama.model_name配置")
+        
+        self.timeout = self.config.get('timeout')
+        if self.timeout is None or not isinstance(self.timeout, (int, float)) or self.timeout <= 0:
+            raise ValueError("配置错误：config.yaml中缺少ollama.timeout配置或配置值无效（必须为正数）")
+        
         self.session = None
     
     async def create_session(self):
