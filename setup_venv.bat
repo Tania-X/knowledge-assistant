@@ -29,21 +29,27 @@ if %MAJOR% LSS 3 (
     exit /b 1
 )
 
-if %MAJOR% EQU 3 if %MINOR% LSS 8 (
-    echo [错误] Python版本过低，需要3.8或更高版本
-    pause
-    exit /b 1
+if %MAJOR% EQU 3 (
+    if "%MINOR%"=="" (
+        echo [错误] 无法解析Python次版本号
+        pause
+        exit /b 1
+    )
+    if %MINOR% LSS 8 (
+        echo [错误] Python版本过低，需要3.8或更高版本
+        pause
+        exit /b 1
+    )
 )
 
 echo [2/4] 创建虚拟环境...
 if exist venv (
-    echo [警告] venv目录已存在，是否删除并重新创建？(Y/N)
-    set /p choice=
-    if /i "%choice%"=="Y" (
-        rmdir /s /q venv
-    ) else (
-        echo [信息] 跳过创建，使用现有venv
-        goto :activate
+    echo [信息] venv目录已存在，删除并重新创建...
+    rmdir /s /q venv
+    if errorlevel 1 (
+        echo [错误] 删除现有venv目录失败
+        pause
+        exit /b 1
     )
 )
 
@@ -56,7 +62,17 @@ if errorlevel 1 (
 
 echo [3/4] 激活虚拟环境并升级pip...
 call venv\Scripts\activate.bat
+if errorlevel 1 (
+    echo [错误] 激活虚拟环境失败
+    pause
+    exit /b 1
+)
 python -m pip install --upgrade pip
+if errorlevel 1 (
+    echo [错误] 升级pip失败
+    pause
+    exit /b 1
+)
 
 echo [4/4] 安装项目依赖...
 if not exist requirements.txt (
