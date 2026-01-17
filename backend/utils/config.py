@@ -75,6 +75,11 @@ class Config:
     def vector_search_config(self) -> Dict:
         """向量搜索配置"""
         return self.get('vector_search', {})
+    
+    @property
+    def search_config(self) -> Dict:
+        """搜索服务配置"""
+        return self.get('search', {})
 
 # 全局配置实例
 config = Config()

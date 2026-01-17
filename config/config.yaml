@@ -3,7 +3,7 @@ database:
 
 ollama:
   base_url: "http://localhost:11434"
-  model_name: "deepseek-chat"  # 可修改为任何已安装的Ollama模型名称
+  model_name: "deepseek-r1:8b"  # 可修改为任何已安装的Ollama模型名称
   timeout: 120
 
 scraper:
@@ -34,8 +34,25 @@ vector_search:
   embedding_dim: 384
   index_type: "faiss"  # faiss or flat
   top_k: 5
+  # 分块嵌入策略
+  chunking:
+    enabled: true  # 是否启用分块嵌入
+    strategy: "smart"  # smart: 智能分块, semantic: 语义分块, fixed: 固定大小分块
+    # 智能分块配置
+    smart:
+      min_chunk_size: 200  # 最小块大小（字符）
+      max_chunk_size: 1000  # 最大块大小（字符）
+      paragraph_delimiters: ["\n\n", "\r\n\r\n"]  # 段落分隔符
+    # 语义分块配置（降级方案）
+    semantic:
+      chunk_size: 500  # 每块字符数
+      overlap: 100  # 块间重叠字符数
+    # 固定分块配置（最终降级方案）
+    fixed:
+      chunk_size: 512  # 固定块大小（字符）
+      overlap: 50  # 块间重叠字符数
 
 search:
   max_results: 5
-  max_context_length: 500
+  max_context_length: 2000
 

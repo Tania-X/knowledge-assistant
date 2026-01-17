@@ -124,17 +124,18 @@ class AsyncWebScraper:
     async def scrape_and_save(self, url: str, tags: Optional[List[str]] = None) -> Dict:
         """抓取并保存到数据库"""
         result = await self.scrape_url(url)
-        
+
         if result['status'] == 'success':
             # 生成向量嵌入
             embedding = None
+            embeddings_array = None
             if self.vector_service and self.vector_service.model:
                 try:
-                    embeddings = self.vector_service.encode([result['content']])
-                    embedding = embeddings[0].tobytes()
+                    embeddings_array = self.vector_service.encode([result['content']])
+                    embedding = embeddings_array[0].tobytes()
                 except Exception as e:
                     print(f"生成向量嵌入失败: {e}")
-            
+
             # 保存到数据库
             doc_id = self.db_manager.save_web_content(
                 url=result['url'],
@@ -143,30 +144,46 @@ class AsyncWebScraper:
                 tags=tags,
                 embedding=embedding
             )
-            
+
+            # 添加到FAISS索引
+            if self.vector_service and embeddings_array is not None:
+                try:
+                    self.vector_service.add_embeddings(
+                        embeddings_array,
+                        [doc_id],
+                        ['web']
+                    )
+                except Exception as e:
+                    print(f"添加到FAISS索引失败: {e}")
+
             result['doc_id'] = doc_id
-        
+
         return result
     
-    async def scrape_and_save_batch(self, urls: List[str], 
+    async def scrape_and_save_batch(self, urls: List[str],
                                    tags: Optional[List[List[str]]] = None) -> List[Dict]:
         """批量抓取并保存"""
         results = await self.scrape_urls(urls)
-        
+
         # 保存到数据库
+        doc_ids = []
+        embeddings_to_add = []
+        source_types_to_add = []
+
         for i, result in enumerate(results):
             if result['status'] == 'success':
                 tag_list = tags[i] if tags and i < len(tags) else None
-                
+
                 # 生成向量嵌入
                 embedding = None
+                embeddings_array = None
                 if self.vector_service and self.vector_service.model:
                     try:
-                        embeddings = self.vector_service.encode([result['content']])
-                        embedding = embeddings[0].tobytes()
+                        embeddings_array = self.vector_service.encode([result['content']])
+                        embedding = embeddings_array[0].tobytes()
                     except Exception as e:
                         print(f"生成向量嵌入失败: {e}")
-                
+
                 doc_id = self.db_manager.save_web_content(
                     url=result['url'],
                     title=result.get('title', ''),
@@ -174,8 +191,27 @@ class AsyncWebScraper:
                     tags=tag_list,
                     embedding=embedding
                 )
-                
+
                 result['doc_id'] = doc_id
-        
+
+                # 收集需要添加到FAISS索引的数据
+                if self.vector_service and embeddings_array is not None:
+                    doc_ids.append(doc_id)
+                    embeddings_to_add.append(embeddings_array[0])
+                    source_types_to_add.append('web')
+
+        # 批量添加到FAISS索引
+        if self.vector_service and embeddings_to_add:
+            try:
+                import numpy as np
+                embeddings_array = np.vstack(embeddings_to_add)
+                self.vector_service.add_embeddings(
+                    embeddings_array,
+                    doc_ids,
+                    source_types_to_add
+                )
+            except Exception as e:
+                print(f"批量添加到FAISS索引失败: {e}")
+
         return results
 

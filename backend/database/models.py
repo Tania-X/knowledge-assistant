@@ -30,6 +30,7 @@ class KnowledgeBase:
                 summary TEXT,
                 tags TEXT,
                 embedding BLOB,  -- 存储向量嵌入（二进制）
+                chunk_index INTEGER DEFAULT 0,  -- 分块索引
                 content_hash TEXT,  -- 内容哈希，用于增量更新
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -40,16 +41,18 @@ class KnowledgeBase:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS file_index (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                file_path TEXT UNIQUE NOT NULL,
+                file_path TEXT NOT NULL,
                 file_name TEXT,
                 file_type TEXT,
                 file_size INTEGER,
                 content TEXT,
                 metadata TEXT,
                 embedding BLOB,  -- 存储向量嵌入
+                chunk_index INTEGER DEFAULT 0,  -- 分块索引
                 content_hash TEXT,  -- 内容哈希，用于增量更新
                 indexed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_modified TIMESTAMP
+                last_modified TIMESTAMP,
+                UNIQUE(file_path, chunk_index)  -- 组合唯一约束
             )
         ''')
         
@@ -85,7 +88,7 @@ class KnowledgeBase:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_file_path ON file_index(file_path)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_file_hash ON file_index(content_hash)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_conversations_created ON conversations(created_at)')
-        
+
         conn.commit()
         conn.close()
     
@@ -191,17 +194,31 @@ class KnowledgeBase:
         """获取所有嵌入向量（用于构建FAISS索引）"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
+
         table = 'web_content' if source_type == 'web' else 'file_index'
-        cursor.execute(f'SELECT id, embedding FROM {table} WHERE embedding IS NOT NULL')
-        
+        cursor.execute(f'SELECT id, embedding, chunk_index FROM {table} WHERE embedding IS NOT NULL')
+
         results = []
         for row in cursor.fetchall():
             if row[1]:  # embedding不为空
-                results.append((row[0], row[1]))
-        
+                results.append((row[0], row[1], row[2] if row[2] else 0))
+
         conn.close()
         return results
+
+    def clear_embeddings(self):
+        """清空所有嵌入数据"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        # 清空web_content的嵌入
+        cursor.execute('UPDATE web_content SET embedding = NULL, chunk_index = 0')
+        # 清空file_index的嵌入
+        cursor.execute('UPDATE file_index SET embedding = NULL, chunk_index = 0')
+
+        conn.commit()
+        conn.close()
+        print("数据库嵌入数据已清空")
     
     def save_conversation(self, query: str, response: str, 
                          context_ids: List[str], model_name: str):

@@ -44,7 +44,7 @@ class LLMService:
         """异步调用本地大模型生成回复"""
         if not self.session:
             await self.create_session()
-        
+
         try:
             # 构建完整提示词
             full_prompt = prompt
@@ -52,7 +52,19 @@ class LLMService:
                 context_text = "\n\n".join([
                     f"[上下文{i+1}]\n{ctx}" for i, ctx in enumerate(context)
                 ])
-                full_prompt = f"{context_text}\n\n问题：{prompt}\n\n请基于以上上下文回答问题："
+                full_prompt = f"""你是知识库助手，请根据以下提供的上下文信息回答问题。
+
+{context_text}
+
+问题：{prompt}
+
+要求：
+1. 优先基于以上上下文信息回答问题
+2. 如果上下文中有相关信息，请引用上下文的具体内容进行解释
+3. 如果上下文中没有答案，明确说明"提供的上下文中没有相关信息"
+4. 回答要详细、准确，不要编造上下文中没有的信息
+
+请回答："""
             
             # 调用Ollama API
             async with self.session.post(
@@ -78,7 +90,7 @@ class LLMService:
         """流式生成（用于实时显示）"""
         if not self.session:
             await self.create_session()
-        
+
         try:
             # 构建完整提示词
             full_prompt = prompt
@@ -86,7 +98,19 @@ class LLMService:
                 context_text = "\n\n".join([
                     f"[上下文{i+1}]\n{ctx}" for i, ctx in enumerate(context)
                 ])
-                full_prompt = f"{context_text}\n\n问题：{prompt}\n\n请基于以上上下文回答问题："
+                full_prompt = f"""你是知识库助手，请根据以下提供的上下文信息回答问题。
+
+{context_text}
+
+问题：{prompt}
+
+要求：
+1. 优先基于以上上下文信息回答问题
+2. 如果上下文中有相关信息，请引用上下文的具体内容进行解释
+3. 如果上下文中没有答案，明确说明"提供的上下文中没有相关信息"
+4. 回答要详细、准确，不要编造上下文中没有的信息
+
+请回答："""
             
             # 调用Ollama流式API
             async with self.session.post(
